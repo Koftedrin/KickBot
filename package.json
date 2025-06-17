@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "axios": "^1.6.8",
-    "kick.js": "^1.2.2"
+    "kick.js": "1.2.2"
   }
 }
