@@ -1,7 +1,7 @@
 # Используем официальный образ Node.js 18
 FROM node:18-slim
 
-# Устанавливаем Chrome и все его зависимости
+# Устанавливаем Chrome и все его зависимости (делаем это как root)
 RUN apt-get update && apt-get install -y \
     chromium \
     libgbm-dev \
@@ -13,8 +13,11 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-0 \
     --no-install-recommends
 
-# Устанавливаем переменную окружения, чтобы puppeteer нашел Chrome
+# Устанавливаем переменную, чтобы puppeteer нашел Chrome
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+# Создаем обычного пользователя, чтобы не работать под root
+RUN useradd -m nodeuser
 
 # Создаем рабочую директорию
 WORKDIR /app
@@ -26,5 +29,11 @@ RUN npm install
 # Копируем остальной код проекта
 COPY . .
 
-# Запускаем бота
+# Отдаем папку новому пользователю
+RUN chown -R nodeuser:nodeuser /app
+
+# Переключаемся на нового пользователя
+USER nodeuser
+
+# Запускаем бота (теперь от имени nodeuser, а не root)
 CMD ["npm", "start"]
