@@ -1,0 +1,2 @@
+# KickBot
+bot for kickchat
