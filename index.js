@@ -10,7 +10,6 @@ const ws = new WebSocket("wss://chat.kick.com");
 ws.on("open", () => {
   console.log("✅ Connected to Kick chat");
 
-  // Авторизация от имени Skin and Bones
   ws.send(JSON.stringify({
     event: "auth",
     data: {
@@ -18,7 +17,6 @@ ws.on("open", () => {
     }
   }));
 
-  // Присоединение к каналу smauf
   ws.send(JSON.stringify({
     event: "join",
     data: { room: channel }
@@ -34,39 +32,17 @@ ws.on("message", async (rawData) => {
 
       console.log(`${username}: ${content}`);
 
-      if (content.toLowerCase() === "!стример") {
-        sendChat("Стример Smauf сейчас с вами! Поддержите подпиской 💪");
-      }
-
-      if (content.toLowerCase().startsWith("!вопрос")) {
-        const clean_message = content.replace("!вопрос", "").trim();
-
-        try {
-          await axios.post(webhook, {
-            broadcaster_id: "smauf",
-            sender_id: username,
-            message: clean_message
-          });
-          console.log("📨 Вопрос отправлен в n8n");
-        } catch (err) {
-          console.error("❌ Ошибка при отправке в n8n:", err.message);
-        }
-      }
+      // просто отправляем всё в n8n
+      await axios.post(webhook, {
+        broadcaster_id: "smauf",
+        sender_id: username,
+        message: content
+      });
     }
   } catch (err) {
-    console.error("💥 Ошибка обработки сообщения:", err.message);
+    console.error("❌ Ошибка:", err.message);
   }
 });
-
-function sendChat(message) {
-  ws.send(JSON.stringify({
-    event: "message",
-    data: {
-      content: message,
-      room: channel
-    }
-  }));
-}
 
 ws.on("close", () => {
   console.log("🔌 Disconnected from chat");
