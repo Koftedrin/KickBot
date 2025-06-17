@@ -4,8 +4,7 @@ services:
     env: node
     plan: free
     region: frankfurt
-    buildpack: https://github.com/jontewks/puppeteer-heroku-buildpack
-    buildCommand: "npm install"
+    buildCommand: "./render-build.sh"
     startCommand: "npm start"
     envVars:
       - key: NODE_VERSION
