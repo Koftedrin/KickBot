@@ -5,11 +5,19 @@ const channel = process.env.CHANNEL;
 const webhookUrl = process.env.WEBHOOK_URL;
 
 const getChannelId = async () => {
-  const res = await axios.get(`https://kick.com/${channel}`);
+  const res = await axios.get(`https://kick.com/${channel}`, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      'Accept': 'text/html',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Referer': 'https://kick.com/',
+    }
+  });
   const match = res.data.match(/"channel_id":(\d+)/);
   if (!match) throw new Error('❌ Channel ID not found');
   return match[1];
 };
+
 
 getChannelId().then((channelId) => {
   const ws = new WebSocket(`wss://ir.kick.com/${channelId}`);
