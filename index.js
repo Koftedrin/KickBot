@@ -5,7 +5,8 @@ const sessionToken = "229957468%7CtrefP0GzQmXEw8wNQ7X8emI5LcbEw5HyhBQFYfWS";
 const channel = "smauf"; // основной канал
 const webhook = "https://sergeifrolov.app.n8n.cloud/webhook/9ca5226c-4baa-4b9e-8ccd-81ba2856a405";
 
-const ws = new WebSocket("wss://chat.kick.com");
+const ws = new WebSocket("wss://chat.api.kick.com");
+
 
 ws.on("open", () => {
   console.log("✅ Connected to Kick chat");
