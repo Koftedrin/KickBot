@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: kick-bot-listener
+    env: node
+    plan: free
+    region: frankfurt
+    buildPacks:
+      - url: https://github.com/jontewks/puppeteer-heroku-buildpack
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: KICK_CHANNEL_NAME
+        fromGroup: kick-bot-secrets
+      - key: BEARER_TOKEN
+        fromGroup: kick-bot-secrets
+      - key: COOKIES
+        fromGroup: kick-bot-secrets
+      - key: N8N_WEBHOOK_URL
+        fromGroup: kick-bot-secrets
