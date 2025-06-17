@@ -7,13 +7,8 @@ services:
     buildCommand: "bash ./render-build.sh"
     startCommand: "npm start"
     envVars:
+      # Задаем эту переменную напрямую
       - key: NODE_VERSION
         value: 18
-      - key: KICK_CHANNEL_NAME
-        fromGroup: kick-bot-secrets
-      - key: BEARER_TOKEN
-        fromGroup: kick-bot-secrets
-      - key: COOKIES
-        fromGroup: kick-bot-secrets
-      - key: N8N_WEBHOOK_URL
-        fromGroup: kick-bot-secrets
+      # А здесь ОДНОЙ строкой импортируем ВСЕ секреты из группы
+      - fromGroup: kick-bot-secrets
