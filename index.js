@@ -1,45 +1,51 @@
-const { Kick } = require('kick.js');
-const axios = require('axios');
+const { createClient } = require("@retconned/kick-js");
+const axios = require("axios");
 
 // --- КОНФИГУРАЦИЯ ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ RENDER ---
 const KICK_CHANNEL_NAME = process.env.KICK_CHANNEL_NAME;
-const KICK_SESSION_TOKEN = process.env.KICK_SESSION_TOKEN;
+const BEARER_TOKEN = process.env.BEARER_TOKEN;
+const COOKIES = process.env.COOKIES;
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
 
-// Проверка, что все переменные заданы в Render
-if (!KICK_CHANNEL_NAME || !KICK_SESSION_TOKEN || !N8N_WEBHOOK_URL) {
-    console.error('❌ ОШИБКА: Одна или несколько переменных окружения (KICK_CHANNEL_NAME, KICK_SESSION_TOKEN, N8N_WEBHOOK_URL) не заданы в настройках Render!');
-    process.exit(1); // Завершаем работу, если нет конфигурации
+// Проверка, что все переменные заданы
+if (!KICK_CHANNEL_NAME || !BEARER_TOKEN || !COOKIES || !N8N_WEBHOOK_URL) {
+    console.error('❌ ОШИБКА: Задайте все переменные в Render: KICK_CHANNEL_NAME, BEARER_TOKEN, COOKIES, N8N_WEBHOOK_URL');
+    process.exit(1);
 }
 
 async function startBot() {
     try {
-        // Авторизуемся под аккаунтом бота, используя токен
-        const client = new Kick({
-            token: decodeURIComponent(KICK_SESSION_TOKEN),
-            log: false,
+        // Создаем клиента для канала стримера
+        // readOnly: false означает, что мы сможем писать в чат (через n8n)
+        const client = createClient(KICK_CHANNEL_NAME, { readOnly: false });
+
+        console.log('[INFO] Клиент создан. Попытка авторизации...');
+
+        // Авторизуемся, используя токен и куки
+        await client.login({
+            type: 'tokens',
+            credentials: {
+                bearerToken: BEARER_TOKEN,
+                cookies: COOKIES,
+            },
         });
 
         client.on('ready', () => {
-            console.log('✅ Бот успешно авторизован.');
+            // client.user.tag содержит имя бота, под которым мы вошли
+            console.log(`✅ Бот успешно авторизован как ${client.user.tag}!`);
+            console.log(`[INFO] Слушаем чат канала: ${KICK_CHANNEL_NAME}`);
         });
 
-        client.on('error', (error) => {
-            console.error('❌ Ошибка клиента Kick.js:', error.message);
+        client.on('close', () => {
+            console.log('🔌 Соединение с чатом закрыто.');
         });
-
-        console.log(`[INFO] Подключение к каналу: ${KICK_CHANNEL_NAME}...`);
         
-        const channel = await client.api.channel(KICK_CHANNEL_NAME);
-        if (!channel) {
-            console.error(`❌ Не удалось найти канал "${KICK_CHANNEL_NAME}". Проверьте правильность названия.`);
-            return;
-        }
+        client.on('error', (err) => {
+            console.error('❌ Произошла ошибка:', err);
+        });
 
-        console.log(`[OK] Успешно подключен к чату канала ID: ${channel.id}`);
-
-        // Слушаем сообщения
-        channel.on('message', (message) => {
+        // Слушаем сообщения в чате
+        client.on('ChatMessage', (message) => {
             const senderUsername = message.sender.username;
             const messageContent = message.content;
 
@@ -47,7 +53,8 @@ async function startBot() {
 
             // Отправляем данные в n8n
             axios.post(N8N_WEBHOOK_URL, {
-                channel_id: channel.id,
+                // channel_id больше не нужен, так как n8n будет использовать API v1
+                channel_name: KICK_CHANNEL_NAME,
                 sender_username: senderUsername,
                 message: messageContent
             }).catch(err => {
@@ -56,7 +63,7 @@ async function startBot() {
         });
 
     } catch (e) {
-        console.error("Критическая ошибка при запуске бота:", e.message);
+        console.error("❌ Критическая ошибка при запуске бота:", e.message);
     }
 }
 
