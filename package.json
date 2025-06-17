@@ -1,13 +1,15 @@
 {
-  "name": "kick-bot-listener",
+  "name": "kick-bot-listener-new",
   "version": "1.0.0",
-  "description": "Kick chat listener for n8n, deployed on Render",
+  "description": "The correct Kick chat listener using @retconned/kick-js",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
+    "@retconned/kick-js": "^0.2.0",
     "axios": "^1.6.8",
-    "kick.js": "1.2.2"
+    "dotenv": "^16.4.5"
   }
 }
