@@ -4,15 +4,14 @@ const axios = require('axios');
 const channel = process.env.CHANNEL;
 const webhookUrl = process.env.WEBHOOK_URL;
 
-axios.get(`https://kick.com/api/v1/channels/${channel}`, {
-  headers: {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-    'Referer': `https://kick.com/${channel}`,
-    'Origin': 'https://kick.com',
-    'Accept': 'application/json'
-  }
-}).then(res => {
-  const channelId = res.data.id;
+const getChannelId = async () => {
+  const res = await axios.get(`https://kick.com/${channel}`);
+  const match = res.data.match(/"channel_id":(\d+)/);
+  if (!match) throw new Error('❌ Channel ID not found');
+  return match[1];
+};
+
+getChannelId().then((channelId) => {
   const ws = new WebSocket(`wss://ir.kick.com/${channelId}`);
 
   ws.on('open', () => console.log('✅ Connected to Kick chat'));
@@ -34,12 +33,12 @@ axios.get(`https://kick.com/api/v1/channels/${channel}`, {
 
   ws.on('close', () => {
     console.log('🔌 Disconnected. Reconnecting in 5s...');
-    setTimeout(() => process.exit(1), 5000); // Render will auto-restart
+    setTimeout(() => process.exit(1), 5000); // Render auto-restart
   });
 
   ws.on('error', (err) => {
     console.error('❌ WebSocket error:', err.message);
   });
 }).catch(err => {
-  console.error('Channel ID error:', err.message);
+  console.error('❌ Error:', err.message);
 });
