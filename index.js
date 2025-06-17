@@ -17,7 +17,15 @@ async function startBot() {
     try {
         // Создаем клиента для канала стримера
         // readOnly: false означает, что мы сможем писать в чат (через n8n)
-        const client = createClient(KICK_CHANNEL_NAME, { readOnly: false });
+        const client = createClient(KICK_CHANNEL_NAME, {
+            readOnly: false,
+            puppeteer: {
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox'
+                ]
+            }
+});
 
         console.log('[INFO] Клиент создан. Попытка авторизации...');
 
