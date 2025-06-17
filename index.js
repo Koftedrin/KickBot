@@ -6,8 +6,10 @@ const webhookUrl = process.env.WEBHOOK_URL;
 
 axios.get(`https://kick.com/api/v1/channels/${channel}`, {
   headers: {
-    'User-Agent': 'Mozilla/5.0',
-    'Referer': `https://kick.com/${channel}`
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    'Referer': `https://kick.com/${channel}`,
+    'Origin': 'https://kick.com',
+    'Accept': 'application/json'
   }
 }).then(res => {
   const channelId = res.data.id;
