@@ -1,54 +1,30 @@
-const WebSocket = require("ws");
+const Kick = require("kick.js");
 const axios = require("axios");
 
-const sessionToken = "229957468%7CtrefP0GzQmXEw8wNQ7X8emI5LcbEw5HyhBQFYfWS";
-const channel = "smauf"; // основной канал
-const webhook = "https://sergeifrolov.app.n8n.cloud/webhook/9ca5226c-4baa-4b9e-8ccd-81ba2856a405";
-
-const ws = new WebSocket("wss://chat.api.kick.com");
-
-
-ws.on("open", () => {
-  console.log("✅ Connected to Kick chat");
-
-  ws.send(JSON.stringify({
-    event: "auth",
-    data: {
-      token: decodeURIComponent(sessionToken),
-    }
-  }));
-
-  ws.send(JSON.stringify({
-    event: "join",
-    data: { room: channel }
-  }));
+const bot = new Kick.Bot({
+  username: "SkinandBones",         // твой бот-аккаунт
+  channel: "smauf",                 // основной канал
+  joinChat: true,
 });
 
-ws.on("message", async (rawData) => {
+const WEBHOOK_URL = "https://sergeifrolov.app.n8n.cloud/webhook/...."; // сюда вставь свой Webhook из n8n
+
+bot.on("message", async (msg) => {
+  if (!msg.content || !msg.sender) return;
+
+  console.log(`[${msg.sender.username}]: ${msg.content}`);
+
+  // Отправка текста в n8n
   try {
-    const msg = JSON.parse(rawData);
-
-    if (msg.event === "message") {
-      const { username, content } = msg.data;
-
-      console.log(`${username}: ${content}`);
-
-      // просто отправляем всё в n8n
-      await axios.post(webhook, {
-        broadcaster_id: "smauf",
-        sender_id: username,
-        message: content
-      });
-    }
+    await axios.post(WEBHOOK_URL, {
+      username: msg.sender.username,
+      message: msg.content,
+    });
   } catch (err) {
-    console.error("❌ Ошибка:", err.message);
+    console.error("❌ Webhook error:", err.message);
   }
 });
 
-ws.on("close", () => {
-  console.log("🔌 Disconnected from chat");
-});
-
-ws.on("error", (err) => {
-  console.error("❌ Chat error:", err.message);
+bot.connect().then(() => {
+  console.log("✅ Бот подключён к чату Kick");
 });
