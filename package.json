@@ -1,16 +1,13 @@
 {
-  "name": "kick-bot",
+  "name": "kick-bot-listener",
   "version": "1.0.0",
-  "description": "Kick chat bot that sends messages to n8n webhook",
+  "description": "Kick chat listener for n8n, deployed on Render",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "axios": "^1.6.8",
-    "kick.js": "1.0.6"
-  },
-  "engines": {
-    "node": ">=16"
+    "kick.js": "^1.3.2"
   }
 }
