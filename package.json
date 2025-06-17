@@ -1,12 +1,16 @@
 {
   "name": "kick-bot",
   "version": "1.0.0",
+  "description": "Kick chat bot that sends messages to n8n webhook",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "axios": "^1.6.8",
-    "ws": "^8.13.0"
+    "kick.js": "^1.0.7"
+  },
+  "engines": {
+    "node": ">=16"
   }
 }
