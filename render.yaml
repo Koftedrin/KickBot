@@ -1,14 +1,8 @@
 services:
   - type: web
     name: kick-bot-listener
-    env: node
+    env: docker
     plan: free
     region: frankfurt
-    buildCommand: "bash ./render-build.sh"
-    startCommand: "npm start"
     envVars:
-      # Задаем эту переменную напрямую
-      - key: NODE_VERSION
-        value: 18
-      # А здесь ОДНОЙ строкой импортируем ВСЕ секреты из группы
       - fromGroup: kick-bot-secrets
