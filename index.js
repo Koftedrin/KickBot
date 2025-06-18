@@ -1,5 +1,6 @@
 const { createClient } = require("@retconned/kick-js");
 const axios = require("axios");
+const express = require('express'); // Добавили express
 
 // --- КОНФИГУРАЦИЯ ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ RENDER ---
 const KICK_CHANNEL_NAME = process.env.KICK_CHANNEL_NAME;
@@ -16,7 +17,6 @@ if (!KICK_CHANNEL_NAME || !BEARER_TOKEN || !COOKIES || !N8N_WEBHOOK_URL) {
 async function startBot() {
     try {
         // Создаем клиента для канала стримера
-        // readOnly: false означает, что мы сможем писать в чат (через n8n)
         const client = createClient(KICK_CHANNEL_NAME, {
             readOnly: false,
             puppeteer: {
@@ -25,7 +25,7 @@ async function startBot() {
                     '--disable-setuid-sandbox'
                 ]
             }
-});
+        });
 
         console.log('[INFO] Клиент создан. Попытка авторизации...');
 
@@ -39,7 +39,6 @@ async function startBot() {
         });
 
         client.on('ready', () => {
-            // client.user.tag содержит имя бота, под которым мы вошли
             console.log(`✅ Бот успешно авторизован как ${client.user.tag}!`);
             console.log(`[INFO] Слушаем чат канала: ${KICK_CHANNEL_NAME}`);
         });
@@ -61,7 +60,6 @@ async function startBot() {
 
             // Отправляем данные в n8n
             axios.post(N8N_WEBHOOK_URL, {
-                // channel_id больше не нужен, так как n8n будет использовать API v1
                 channel_name: KICK_CHANNEL_NAME,
                 sender_username: senderUsername,
                 message: messageContent
@@ -75,4 +73,17 @@ async function startBot() {
     }
 }
 
+// --- ВЕБ-СЕРВЕР ДЛЯ RENDER ---
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('Bot listener is alive!');
+});
+
+app.listen(port, () => {
+  console.log(`[INFO] Web server started on port ${port} to keep Render happy.`);
+});
+
+// Запускаем основную логику бота
 startBot();
