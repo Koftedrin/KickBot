@@ -1,15 +1,16 @@
 {
-  "name": "kick-bot-final",
+  "name": "kick-bot-final-stable",
   "version": "1.0.0",
-  "description": "A robust Kick chat listener",
+  "description": "The robust Kick chat listener",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
+    "@retconned/kick-js": "^0.2.0",
     "axios": "^1.6.8",
-    "express": "^4.19.2",
-    "kick-api": "^1.0.1"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
   }
 }
