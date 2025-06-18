@@ -2,7 +2,9 @@ const { createClient } = require("@retconned/kick-js");
 const axios = require("axios");
 const express = require('express');
 
-// --- КОНФИГУРАЦИЯ ---
+let isBotReady = false; // Флаг готовности бота
+
+// ... (весь остальной код бота без изменений) ...
 const KICK_CHANNEL_NAME = process.env.KICK_CHANNEL_NAME;
 const BEARER_TOKEN = process.env.BEARER_TOKEN;
 const COOKIES = process.env.COOKIES;
@@ -40,10 +42,12 @@ async function startBot() {
         client.on('ready', () => {
             console.log(`✅ Бот успешно авторизован как ${client.user.tag}!`);
             console.log(`[INFO] Слушаем чат канала: ${KICK_CHANNEL_NAME}`);
+            isBotReady = true; // <--- ПОДНИМАЕМ ФЛАГ
         });
 
         client.on('close', () => {
             console.log('🔌 Соединение с чатом закрыто.');
+            isBotReady = false;
         });
         
         client.on('error', (err) => {
@@ -78,7 +82,16 @@ app.get('/', (req, res) => {
   res.send('Bot listener is alive!');
 });
 
+// СПЕЦИАЛЬНЫЙ ПУТЬ ДЛЯ ПРОВЕРКИ RENDER
+app.get('/health', (req, res) => {
+  if (isBotReady) {
+    res.status(200).send('OK');
+  } else {
+    res.status(503).send('Bot not ready');
+  }
+});
+
 app.listen(port, () => {
-  console.log(`[INFO] Web server started on port ${port} to keep Render happy.`);
+  console.log(`[INFO] Web server started on port ${port}.`);
   startBot();
 });
