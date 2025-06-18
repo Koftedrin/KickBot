@@ -12,31 +12,38 @@ if (!KICK_CHANNEL_NAME || !KICK_SESSION_COOKIE || !N8N_WEBHOOK_URL) {
     process.exit(1);
 }
 
-// --- ЗАПУСК БОТА (с правильным синтаксисом) ---
-const client = new KickChat({
-    kick_session: KICK_SESSION_COOKIE,
+function startBot() {
+    try {
+        console.log('[DEBUG] Попытка создать клиент KickChat...');
+        const client = new KickChat({
+            kick_session: KICK_SESSION_COOKIE,
 
-    onReady: () => {
-        console.log('✅ Бот готов и слушает!');
-        client.joinChannel(KICK_CHANNEL_NAME);
-    },
+            onReady: () => {
+                console.log('✅ Бот готов и слушает!');
+                client.joinChannel(KICK_CHANNEL_NAME);
+            },
 
-    onError: (error) => {
-        console.error('❌ Ошибка бота:', error);
-    },
+            onError: (error) => {
+                console.error('❌ Ошибка бота (асинхронная):', error);
+            },
 
-    onMessage: (message) => {
-        console.log(`[${message.author.username}]: ${message.content}`);
+            onMessage: (message) => {
+                console.log(`[${message.author.username}]: ${message.content}`);
 
-        axios.post(N8N_WEBHOOK_URL, {
-            channel_name: KICK_CHANNEL_NAME,
-            sender_username: message.author.username,
-            message: message.content
-        }).catch(err => {
-            console.error('❌ Ошибка отправки данных в n8n:', err.message);
+                axios.post(N8N_WEBHOOK_URL, {
+                    channel_name: KICK_CHANNEL_NAME,
+                    sender_username: message.author.username,
+                    message: message.content
+                }).catch(err => {
+                    console.error('❌ Ошибка отправки данных в n8n:', err.message);
+                });
+            }
         });
+        console.log('[DEBUG] Клиент KickChat успешно создан.');
+    } catch (e) {
+        console.error('❌ КРИТИЧЕСКАЯ ОШИБКА при создании клиента:', e);
     }
-});
+}
 
 // --- ВЕБ-СЕРВЕР ДЛЯ RENDER ---
 const app = express();
@@ -44,6 +51,9 @@ app.get('/', (req, res) => {
   res.send('Bot listener is alive!');
 });
 
+// СНАЧАЛА ЗАПУСКАЕМ ВЕБ-СЕРВЕР
 app.listen(3000, () => {
   console.log('[INFO] Web server запущен.');
+  // И ТОЛЬКО ПОТОМ ЗАПУСКАЕМ БОТА
+  startBot();
 });
