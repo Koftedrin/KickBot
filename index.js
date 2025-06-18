@@ -1,75 +1,42 @@
-const { createClient } = require("@retconned/kick-js");
-const axios = require("axios");
+const { KickChat } = require('kick-chat');
+const axios = require('axios');
 const express = require('express');
 
-// --- КОНФИГУРАЦИЯ ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ RENDER ---
+// --- КОНФИГУРАЦИЯ ---
 const KICK_CHANNEL_NAME = process.env.KICK_CHANNEL_NAME;
-const BEARER_TOKEN = process.env.BEARER_TOKEN;
-const COOKIES = process.env.COOKIES;
+const KICK_SESSION_COOKIE = process.env.KICK_SESSION_COOKIE;
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
 
-if (!KICK_CHANNEL_NAME || !BEARER_TOKEN || !COOKIES || !N8N_WEBHOOK_URL) {
-    console.error('❌ ОШИБКА: Задайте все переменные в Render: KICK_CHANNEL_NAME, BEARER_TOKEN, COOKIES, N8N_WEBHOOK_URL');
+if (!KICK_CHANNEL_NAME || !KICK_SESSION_COOKIE || !N8N_WEBHOOK_URL) {
+    console.error('❌ ОШИБКА: Задайте все переменные: KICK_CHANNEL_NAME, KICK_SESSION_COOKIE, N8N_WEBHOOK_URL');
     process.exit(1);
 }
 
-async function startBot() {
-    try {
-        const client = createClient(KICK_CHANNEL_NAME, {
-            readOnly: false,
-            puppeteer: {
-                // ДОБАВЛЯЕМ ФЛАГИ ЭКОНОМИИ ПАМЯТИ
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage', // Использовать /tmp вместо /dev/shm
-                    '--single-process' // Работать в одном процессе
-                ]
-            }
-        });
+// --- ЗАПУСК БОТА ---
+const client = new KickChat({
+    kick_session: KICK_SESSION_COOKIE,
+});
 
-        console.log('[INFO] Клиент бота создан. Попытка авторизации...');
+client.on('ready', () => {
+    console.log('✅ Бот готов и слушает!');
+    client.joinChannel(KICK_CHANNEL_NAME);
+});
 
-        await client.login({
-            type: 'tokens',
-            credentials: {
-                bearerToken: BEARER_TOKEN,
-                cookies: COOKIES,
-            },
-        });
+client.on('error', (error) => {
+    console.error('❌ Ошибка бота:', error);
+});
 
-        client.on('ready', () => {
-            console.log(`✅ Бот успешно авторизован как ${client.user.tag}!`);
-            console.log(`[INFO] Слушаем чат канала: ${KICK_CHANNEL_NAME}`);
-        });
+client.on('message', (message) => {
+    console.log(`[${message.author.username}]: ${message.content}`);
 
-        client.on('close', () => {
-            console.log('🔌 Соединение с чатом закрыто.');
-        });
-        
-        client.on('error', (err) => {
-            console.error('❌ Произошла ошибка:', err);
-        });
-
-        client.on('ChatMessage', (message) => {
-            const senderUsername = message.sender.username;
-            const messageContent = message.content;
-
-            console.log(`[${senderUsername}]: ${messageContent}`);
-
-            axios.post(N8N_WEBHOOK_URL, {
-                channel_name: KICK_CHANNEL_NAME,
-                sender_username: senderUsername,
-                message: messageContent
-            }).catch(err => {
-                console.error('❌ Ошибка отправки данных в n8n:', err.message);
-            });
-        });
-
-    } catch (e) {
-        console.error("❌ Критическая ошибка при запуске бота:", e.message);
-    }
-}
+    axios.post(N8N_WEBHOOK_URL, {
+        channel_name: KICK_CHANNEL_NAME,
+        sender_username: message.author.username,
+        message: message.content
+    }).catch(err => {
+        console.error('❌ Ошибка отправки данных в n8n:', err.message);
+    });
+});
 
 // --- ВЕБ-СЕРВЕР ДЛЯ RENDER ---
 const app = express();
@@ -80,6 +47,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`[INFO] Web server started on port ${port} to keep Render happy.`);
-  startBot();
+  console.log(`[INFO] Web server запущен на порту ${port}.`);
 });
