@@ -1,14 +1,15 @@
 {
-  "name": "kick-bot-replit",
+  "name": "kick-bot-final",
   "version": "1.0.0",
-  "description": "A lightweight Kick chat listener on Replit",
+  "description": "A robust Kick chat listener",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "axios": "^1.6.8",
     "express": "^4.19.2",
-    "kick-chat": "1.0.2"
+    "kick-api": "^1.0.1"
   }
 }
