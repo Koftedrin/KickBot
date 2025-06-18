@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: kick-bot-listener
+    name: kick-bot-render
     env: node
     plan: free
     region: frankfurt
