@@ -1,5 +1,5 @@
 services:
-  - type: web
+  - type: worker
     name: kick-bot-listener
     env: docker
     plan: free
