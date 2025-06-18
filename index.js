@@ -1,6 +1,6 @@
 const { createClient } = require("@retconned/kick-js");
 const axios = require("axios");
-const express = require('express'); // Добавили express
+const express = require('express');
 
 // --- КОНФИГУРАЦИЯ ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ RENDER ---
 const KICK_CHANNEL_NAME = process.env.KICK_CHANNEL_NAME;
@@ -8,7 +8,6 @@ const BEARER_TOKEN = process.env.BEARER_TOKEN;
 const COOKIES = process.env.COOKIES;
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
 
-// Проверка, что все переменные заданы
 if (!KICK_CHANNEL_NAME || !BEARER_TOKEN || !COOKIES || !N8N_WEBHOOK_URL) {
     console.error('❌ ОШИБКА: Задайте все переменные в Render: KICK_CHANNEL_NAME, BEARER_TOKEN, COOKIES, N8N_WEBHOOK_URL');
     process.exit(1);
@@ -16,7 +15,6 @@ if (!KICK_CHANNEL_NAME || !BEARER_TOKEN || !COOKIES || !N8N_WEBHOOK_URL) {
 
 async function startBot() {
     try {
-        // Создаем клиента для канала стримера
         const client = createClient(KICK_CHANNEL_NAME, {
             readOnly: false,
             puppeteer: {
@@ -27,9 +25,8 @@ async function startBot() {
             }
         });
 
-        console.log('[INFO] Клиент создан. Попытка авторизации...');
+        console.log('[INFO] Клиент бота создан. Попытка авторизации...');
 
-        // Авторизуемся, используя токен и куки
         await client.login({
             type: 'tokens',
             credentials: {
@@ -51,14 +48,12 @@ async function startBot() {
             console.error('❌ Произошла ошибка:', err);
         });
 
-        // Слушаем сообщения в чате
         client.on('ChatMessage', (message) => {
             const senderUsername = message.sender.username;
             const messageContent = message.content;
 
             console.log(`[${senderUsername}]: ${messageContent}`);
 
-            // Отправляем данные в n8n
             axios.post(N8N_WEBHOOK_URL, {
                 channel_name: KICK_CHANNEL_NAME,
                 sender_username: senderUsername,
@@ -75,15 +70,15 @@ async function startBot() {
 
 // --- ВЕБ-СЕРВЕР ДЛЯ RENDER ---
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000; // Указываем порт 10000
 
 app.get('/', (req, res) => {
   res.send('Bot listener is alive!');
 });
 
+// СНАЧАЛА ЗАПУСКАЕМ ВЕБ-СЕРВЕР
 app.listen(port, () => {
   console.log(`[INFO] Web server started on port ${port} to keep Render happy.`);
+  // И ТОЛЬКО ПОТОМ ЗАПУСКАЕМ БОТА
+  startBot();
 });
-
-// Запускаем основную логику бота
-startBot();
