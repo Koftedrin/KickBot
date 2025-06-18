@@ -18,9 +18,12 @@ async function startBot() {
         const client = createClient(KICK_CHANNEL_NAME, {
             readOnly: false,
             puppeteer: {
+                // ДОБАВЛЯЕМ ФЛАГИ ЭКОНОМИИ ПАМЯТИ
                 args: [
                     '--no-sandbox',
-                    '--disable-setuid-sandbox'
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage', // Использовать /tmp вместо /dev/shm
+                    '--single-process' // Работать в одном процессе
                 ]
             }
         });
@@ -70,15 +73,13 @@ async function startBot() {
 
 // --- ВЕБ-СЕРВЕР ДЛЯ RENDER ---
 const app = express();
-const port = process.env.PORT || 10000; // Указываем порт 10000
+const port = process.env.PORT || 10000;
 
 app.get('/', (req, res) => {
   res.send('Bot listener is alive!');
 });
 
-// СНАЧАЛА ЗАПУСКАЕМ ВЕБ-СЕРВЕР
 app.listen(port, () => {
   console.log(`[INFO] Web server started on port ${port} to keep Render happy.`);
-  // И ТОЛЬКО ПОТОМ ЗАПУСКАЕМ БОТА
   startBot();
 });
